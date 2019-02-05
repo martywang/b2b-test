@@ -18,6 +18,7 @@ using Swashbuckle.AspNetCore.Swagger;
 using System;
 using Rebus.Config;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Audatex.B2B.SDK.FNOL
 {
@@ -42,14 +43,16 @@ namespace Audatex.B2B.SDK.FNOL
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc();
 
 			services.AddSwaggerGen(c =>
 			{
 				c.SwaggerDoc("v1", new Info { Title = "Audatex B2B SDK for FNOL", Version = "v1" });
 			});
 
-			var mongoConnectionString = Configuration["vcap:services:mongodb-dev:0:credentials:uri"];
+			var mongoConnectionString = Configuration["vcap:services:sol-mongodb-usdc30-dev:0:credentials:uri"];
+
+			Debug.WriteLine($"mongo connection string : {mongoConnectionString}");
 
 			//Repositories
 			services.AddTransient<IRepository<AssignmentEntity>>(provider => new MongoRepository<AssignmentEntity>(mongoConnectionString));
@@ -60,7 +63,12 @@ namespace Audatex.B2B.SDK.FNOL
             // Rebus
             // Register handlers 
             //services.AutoRegisterHandlersFromAssemblyOf<Handler1>();
-            var rabbitmqConnectionString = Configuration["vcap:services:rabbitmq-dev:0:credentials:uri"];
+            var rabbitmqConnectionString = Configuration["vcap:services:sol-rabbitmq-dev:0:credentials:uri"];
+
+
+			Debug.WriteLine($"rabbit connection string : {rabbitmqConnectionString}");
+
+
 			//const string queueName = "Blah";
 			// Configure and register Rebus
 			services.AddRebus(configure => configure
@@ -79,10 +87,10 @@ namespace Audatex.B2B.SDK.FNOL
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
+            //if (env.IsDevelopment())
+           // {
                 app.UseDeveloperExceptionPage();
-            }
+            //}
 
             app.UseMvc();
 			app.UseSwagger();
