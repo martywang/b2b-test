@@ -19,12 +19,18 @@ namespace Audatex.B2B.SDK.FNOL.Services
 		}
 
 		public async Task<string> AddAssignmentAsync(Assignment assignment)
-		{   
-            await bus.Publish(new AssignmentMessage()
-            {
-                FirstName = assignment.FirstName,
-                LastName = assignment.LastName
-            });
+		{
+			//await bus.Publish(new AssignmentMessage()
+			//{
+			//    FirstName = assignment.FirstName,
+			//    LastName = assignment.LastName
+			//});
+
+			await bus.Advanced.Routing.Send("Blah@Dingo", new AssignmentMessage()
+			{
+				FirstName = assignment.FirstName,
+				LastName = assignment.LastName
+			});
 
 			var result = await _repository.AddAsync(new AssignmentEntity()
 			{

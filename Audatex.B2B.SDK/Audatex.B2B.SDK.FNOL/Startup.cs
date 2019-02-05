@@ -17,6 +17,7 @@ using Steeltoe.Extensions.Configuration;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using Rebus.Config;
+using System.Collections.Generic;
 
 namespace Audatex.B2B.SDK.FNOL
 {
@@ -48,7 +49,7 @@ namespace Audatex.B2B.SDK.FNOL
 				c.SwaggerDoc("v1", new Info { Title = "Audatex B2B SDK for FNOL", Version = "v1" });
 			});
 
-			var mongoConnectionString = Configuration["vcap:services:mongodb-odb:0:credentials:uri"];
+			var mongoConnectionString = Configuration["vcap:services:mongodb-dev:0:credentials:uri"];
 
 			//Repositories
 			services.AddTransient<IRepository<AssignmentEntity>>(provider => new MongoRepository<AssignmentEntity>(mongoConnectionString));
@@ -59,16 +60,21 @@ namespace Audatex.B2B.SDK.FNOL
             // Rebus
             // Register handlers 
             //services.AutoRegisterHandlersFromAssemblyOf<Handler1>();
-            const string connectionString = "amqp://localhost";
-            const string queueName = "Blah";
-            // Configure and register Rebus
-            services.AddRebus(configure => configure
-                //.Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "Messages"))
-                //.Subscriptions(s => s.StoreInMemory())
-                .Transport(t => t.UseRabbitMq(connectionString, queueName))
-                //.Subscriptions(s => s.StoreInMemory())
-                .Routing(r => r.TypeBased().MapAssemblyOf<AssignmentMessage>("Messages")));
-        }
+            var rabbitmqConnectionString = Configuration["vcap:services:rabbitmq-dev:0:credentials:uri"];
+			//const string queueName = "Blah";
+			// Configure and register Rebus
+			services.AddRebus(configure => configure
+				.Options(o => o.LogPipeline(verbose: true))
+				.Logging(l => l.Console())
+				 //.Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "Messages"))
+				 //.Subscriptions(s => s.StoreInMemory())
+				 .Transport(t => t.UseRabbitMqAsOneWayClient(new List<ConnectionEndpoint>() { new ConnectionEndpoint() { ConnectionString = rabbitmqConnectionString } }))
+				 //.Transport(t => t.UseRabbitMq( connectionString, queueName))
+				 
+				//.Subscriptions(s => s.StoreInMemory())
+				//.Routing(r => r.TypeBased().MapAssemblyOf<AssignmentMessage>("Recall"))
+				);
+		}
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -84,9 +90,6 @@ namespace Audatex.B2B.SDK.FNOL
 			{
 				c.SwaggerEndpoint("/swagger/v1/swagger.json", "Audatex B2B SDK for FNOL V1");
 			});
-
-            //Rebus
-            //var bus = app.ApplicationServices.GetRequiredService<IBus>();
 
         }
     }
