@@ -26,7 +26,7 @@ namespace Audatex.B2B.SDK.FNOL.Services
 			//    LastName = assignment.LastName
 			//});
 
-			await bus.Advanced.Routing.Send("Blah@Dingo", new AssignmentMessage()
+			await bus.Advanced.Routing.Send("AssignmentQueue", new AssignmentMessage()
 			{
 				FirstName = assignment.FirstName,
 				LastName = assignment.LastName
